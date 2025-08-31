@@ -1,0 +1,74 @@
+import UIKit
+import AVFoundation
+
+class KeyboardViewController: UIInputViewController {
+
+    let recordButton = UIButton(type: .system)
+    var audioRecorder: AVAudioRecorder?
+    var audioURL: URL?
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupButton()
+    }
+
+    func setupButton() {
+        recordButton.setTitle("🎤 Hold to Record", for: .normal)
+        recordButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        recordButton.backgroundColor = .systemBlue
+        recordButton.setTitleColor(.white, for: .normal)
+        recordButton.layer.cornerRadius = 12
+        recordButton.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(recordButton)
+
+        NSLayoutConstraint.activate([
+            recordButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            recordButton.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            recordButton.widthAnchor.constraint(equalToConstant: 250),
+            recordButton.heightAnchor.constraint(equalToConstant: 60)
+        ])
+
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+        longPress.minimumPressDuration = 0.05
+        recordButton.addGestureRecognizer(longPress)
+    }
+
+    @objc func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+        if gesture.state == .began {
+            startRecording()
+        } else if gesture.state == .ended || gesture.state == .cancelled {
+            stopRecording()
+        }
+    }
+
+    func startRecording() {
+        let settings: [String: Any] = [
+            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+            AVSampleRateKey: 44100,
+            AVNumberOfChannelsKey: 1,
+            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+        ]
+        let filename = UUID().uuidString + ".m4a"
+        let targetURL = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+        audioURL = targetURL
+
+        do {
+            audioRecorder = try AVAudioRecorder(url: targetURL, settings: settings)
+            audioRecorder?.record()
+            recordButton.backgroundColor = .systemRed
+        } catch {
+            recordButton.backgroundColor = .systemBlue
+        }
+    }
+
+    func stopRecording() {
+        audioRecorder?.stop()
+        recordButton.backgroundColor = .systemBlue
+        guard audioURL != nil else {
+            textDocumentProxy.insertText("[Recording error]")
+            return
+        }
+        // Mock response for now
+        textDocumentProxy.insertText("[Mock Transcription] Hello from Whisper!")
+    }
+}

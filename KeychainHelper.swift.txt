@@ -1,0 +1,36 @@
+import Foundation
+import Security
+
+final class KeychainHelper {
+    static let standard = KeychainHelper()
+    private init() {}
+    func save(_ data: Data, service: String, account: String, accessGroup: String? = nil) {
+        var query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecValueData as String: data
+        ]
+        if let group = accessGroup {
+            query[kSecAttrAccessGroup as String] = group
+        }
+        SecItemDelete(query as CFDictionary)
+        SecItemAdd(query as CFDictionary, nil)
+    }
+    func read(service: String, account: String, accessGroup: String? = nil) -> Data? {
+        var query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+        if let group = accessGroup {
+            query[kSecAttrAccessGroup as String] = group
+        }
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        if status == errSecSuccess { return result as? Data }
+        return nil
+    }
+}

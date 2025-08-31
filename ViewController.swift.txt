@@ -1,0 +1,43 @@
+import UIKit
+
+class ViewController: UIViewController {
+
+    let apiKeyField = UITextField()
+    let saveButton = UIButton(type: .system)
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .white
+        setupUI()
+    }
+
+    func setupUI() {
+        apiKeyField.translatesAutoresizingMaskIntoConstraints = false
+        apiKeyField.placeholder = "Enter Whisper API Key"
+        apiKeyField.borderStyle = .roundedRect
+        view.addSubview(apiKeyField)
+
+        saveButton.setTitle("Save Key", for: .normal)
+        saveButton.translatesAutoresizingMaskIntoConstraints = false
+        saveButton.addTarget(self, action: #selector(saveKey), for: .touchUpInside)
+        view.addSubview(saveButton)
+
+        NSLayoutConstraint.activate([
+            apiKeyField.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            apiKeyField.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -20),
+            apiKeyField.widthAnchor.constraint(equalToConstant: 300),
+
+            saveButton.topAnchor.constraint(equalTo: apiKeyField.bottomAnchor, constant: 12),
+            saveButton.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+        ])
+    }
+
+    @objc func saveKey() {
+        guard let key = apiKeyField.text, !key.isEmpty else { return }
+        let defaults = UserDefaults(suiteName: "group.com.yourname.voicekeyboard")
+        defaults?.set(key, forKey: "WHISPER_API_KEY")
+        let alert = UIAlertController(title: "Saved", message: "API key saved.", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+}
